@@ -6,19 +6,34 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Minimal "fake" authentication
-    if (username === "admin" && password === "password") {
-      navigate("/home"); // Redirect to Home page on success
+  
+  const handleLogin = async (username, password) => {
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      const token = data.access_token; // JWT from Flask
+      localStorage.setItem("jwt", token); // store it in localStorage (or memory)
+      alert("Login successful");
     } else {
-      alert("Invalid credentials");
+      alert(data.msg || "Login failed");
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleLogin}
       style={{ display: "flex", flexDirection: "column", width: "200px", margin: "50px auto" }}
     >
       <input
