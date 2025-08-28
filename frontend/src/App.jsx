@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import Login from './Login';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./Login";
+import Home from "./Home";
 
-function App() {
-  const [token, setToken] = useState(null);
-
+export default function App() {
   return (
-    <div>
-      {token ? <h2>Logged in with token: {token}</h2> : <Login setToken={setToken} />}
-    </div>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/home" element={<Home />} />
+      {/* Redirect any unknown routes to login */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
-
-export default App;
