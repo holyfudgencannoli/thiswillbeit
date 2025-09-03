@@ -1,40 +1,17 @@
-// Top-level build file
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath "com.android.tools.build:gradle:8.2.1"
-    }
-}
+from kivy.app import App
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.webview import WebView
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+class WebViewApp(App):
+    def build(self):
+        layout = BoxLayout(orientation='vertical')
+        webview = WebView(url='https://www.example.com')
+        layout.add_widget(webview)
+        return layout
 
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android' // For Kotlin support
-    id 'com.chaquo.python' version '12.4.0'
-}
-
-android {
-    namespace 'com.example.myandroidapp'
-    compileSdk 34
-
-    defaultConfig {
-        applicationId "com.example.myandroidapp"
-        minSdk 26
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-    }
-
-    buildFeatures {
+if __name__ == '__main__':
+    WebViewApp().run()    buildFeatures {
         viewBinding true
     }
 
