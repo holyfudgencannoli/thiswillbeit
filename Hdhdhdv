@@ -1,121 +1,128 @@
-// Top-level build.gradle
-plugins {
-    id 'com.android.application' version '8.3.0' apply false
-    id 'com.chaquo.python' version '15.0.1' apply false
-}
-
-pluginManagement {
+// Top-level build file
+buildscript {
     repositories {
-        gradlePluginPortal()
         google()
         mavenCentral()
     }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.2.1"
+    }
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+allprojects {
     repositories {
         google()
         mavenCentral()
     }
 }
-
-rootProject.name = "MyApp"
-include(":app")
 
 plugins {
     id 'com.android.application'
-    id 'com.chaquo.python'
+    id 'org.jetbrains.kotlin.android' // For Kotlin support
+    id 'com.chaquo.python' version '12.4.0'
 }
 
 android {
-    namespace "com.example.myapp"
+    namespace 'com.example.myandroidapp'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.myapp"
-        minSdk 24
+        applicationId "com.example.myandroidapp"
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
-
-        python {
-            pip {
-                install "flask"
-            }
-        }
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    buildFeatures {
+        viewBinding true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['/META-INF/*']
         }
+    }
+}
+
+python {
+    // Chaquopy configuration
+    buildPython "3.12" // Latest supported Python version
+    pip {
+        install "flask"
     }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.webkit:webkit:1.11.0'
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "com.google.android.material:material:1.10.0"
 }
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.myapp">
+    package="com.example.myandroidapp">
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
+        android:label="MyAndroidApp"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
     </application>
 
 </manifest>
 
-<resources>
-    <string name="app_name">MyApp</string>
-</resources>
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-package com.example.myapp;
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-import android.os.Bundle;
-import android.webkit.WebView;
-import androidx.appcompat.app.AppCompatActivity;
-import com.chaquo.python.PyObject;
-import com.chaquo.python.Python;
-import com.chaquo.python.android.AndroidPlatform;
+</LinearLayout>
 
-public class MainActivity extends AppCompatActivity {
-    private WebView webView;
+package com.example.myandroidapp
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+import android.os.Bundle
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.appcompat.app.AppCompatActivity
+import com.chaquo.python.PyObject
+import com.chaquo.python.Python
+import kotlinx.coroutines.*
 
-        if (!Python.isStarted()) {
-            Python.start(new AndroidPlatform(this));
+class MainActivity : AppCompatActivity() {
+    private lateinit var webView: WebView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        webView = findViewById(R.id.webView)
+        webView.settings.javaScriptEnabled = true
+        webView.webViewClient = WebViewClient()
+
+        // Load React index.html from assets
+        webView.loadUrl("file:///android_asset/react_build/index.html")
+
+        // Start Flask server in background
+        CoroutineScope(Dispatchers.IO).launch {
+            startFlaskServer()
         }
+    }
 
-        Python py = Python.getInstance();
-        PyObject appModule = py.getModule("app");
-
-        // Start Flask in background
-        new Thread(() -> appModule.callAttr("start_flask")).start();
-
-        // Setup WebView
-        webView = new WebView(this);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.loadUrl("http://127.0.0.1:5000/");
-
-        setContentView(webView);
+    private fun startFlaskServer() {
+        val py = Python.getInstance()
+        val flaskApp: PyObject = py.getModule("flask_app")
+        flaskApp.callAttr("run_app")
     }
 }
-
-
-
